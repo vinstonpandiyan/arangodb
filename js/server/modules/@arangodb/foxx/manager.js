@@ -975,15 +975,23 @@ function runTests (mount, options = {}) {
   return require('@arangodb/foxx/mocha').run(service, options.reporter);
 }
 
-function setDevelopmentMode (mount, enabled = true) {
+function enableDevelopmentMode (mount) {
   const service = getServiceInstance(mount);
-  service.development(enabled);
+  service.development(true);
   utils.updateService(mount, service.toJSON());
-  if (!enabled) {
-    // Make sure setup changes from devmode are respected
-    service.executeScript('setup');
-  }
   propagateServiceReconfigured(service);
+  return service;
+}
+
+function disableDevelopmentMode (mount) {
+  const service = getServiceInstance(mount);
+  service.development(false);
+  createServiceBundle(mount);
+  service.updateChecksum();
+  utils.updateService(mount, service.toJSON());
+  // Make sure setup changes from devmode are respected
+  service.executeScript('setup');
+  propagateServiceReplaced(service);
   return service;
 }
 
@@ -1062,8 +1070,8 @@ exports.replace = replace;
 exports.upgrade = upgrade;
 exports.runTests = runTests;
 exports.runScript = runScript;
-exports.development = (mount) => setDevelopmentMode(mount, true);
-exports.production = (mount) => setDevelopmentMode(mount, false);
+exports.development = enableDevelopmentMode;
+exports.production = disableDevelopmentMode;
 exports.setConfiguration = setConfiguration;
 exports.setDependencies = setDependencies;
 exports.requireService = requireService;

@@ -1062,9 +1062,9 @@ function safeChecksum (mount) {
 
 // Exports
 
-exports.install = install;
 exports._installLocal = installLocal;
 exports._uninstallLocal = uninstallLocal;
+exports.install = install;
 exports.uninstall = uninstall;
 exports.replace = replace;
 exports.upgrade = upgrade;

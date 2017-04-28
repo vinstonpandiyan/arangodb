@@ -68,11 +68,24 @@ module.exports =
       assert(definition.mount, 'mount path required');
       const basePath = definition.basePath || FoxxService.basePath(definition.mount);
       const manifestPath = path.resolve(basePath, 'manifest.json');
-      return Manifest.validate(
+      const manifest = Manifest.validate(
         manifestPath,
         definition.mount,
         definition.noisy
       );
+      FoxxService.validateServiceFiles(definition.mount, manifest);
+      return manifest;
+    }
+
+    static validateServiceFiles (mount, manifest) {
+      const servicePath = FoxxService.basePath(mount);
+      if (manifest.main) {
+        internal.parseFile(path.resolve(servicePath, manifest.main));
+      }
+      for (const name of Object.keys(manifest.scripts)) {
+        const scriptFilename = manifest.scripts[name];
+        internal.parseFile(path.resolve(servicePath, scriptFilename));
+      }
     }
 
     static create (definition) {

@@ -46,12 +46,13 @@ describe('Foxx Manager', function () {
 
       it('should contains in _apps', function () {
         FoxxManager.install(setupTeardownApp, mount);
-        const s = db._query(aql`
+        const checksum = db._query(aql`
           FOR service IN _apps
           FILTER service.mount == ${mount}
-          RETURN service
+          RETURN service.checksum
         `).next();
-        expect(s.checksum).to.have.lengthOf(7);
+        expect(checksum).to.be.a('string');
+        expect(checksum).not.to.be.empty;
       });
 
       it('should provide a bundle', function () {
@@ -59,7 +60,12 @@ describe('Foxx Manager', function () {
         const url = `${arango.getEndpoint().replace('tcp://', 'http://')}/_api/foxx/bundle?mount=${encodeURIComponent(mount)}`;
         const res = download(url);
         expect(res.code).to.equal(200);
-        expect(res.headers.etag).to.have.lengthOf(7 + 2);// +2 because format = "checksum"
+        const checksum = db._query(aql`
+          FOR service IN _apps
+          FILTER service.mount == ${mount}
+          RETURN service.checksum
+        `).next();
+        expect(res.headers.etag).to.equal(`"${checksum}"`);
       });
 
       it('should run the setup script', function () {
